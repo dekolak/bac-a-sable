@@ -1,5 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
+import { cookieSecure } from "@/lib/cookies";
 
 // Les invités (blocs PARTAGE) n'ont pas de compte : après avoir suivi
 // leur lien magique, on mémorise les tokens d'invitation acceptés dans
@@ -20,7 +21,7 @@ export async function addGuestToken(token: string): Promise<void> {
   current.add(token);
   jar.set(GUEST_COOKIE, [...current].join("."), {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecure(),
     sameSite: "lax",
     path: "/",
     expires: new Date(Date.now() + GUEST_TTL_MS),
