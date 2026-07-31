@@ -20,6 +20,7 @@ export function LoginForm() {
           type="email"
           autoComplete="username"
           required
+          defaultValue={state.email ?? ""}
           className="w-full rounded-md border border-border bg-panel px-3 py-2 outline-none focus:border-accent"
         />
       </div>

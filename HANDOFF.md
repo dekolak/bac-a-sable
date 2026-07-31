@@ -98,6 +98,27 @@ build) :
 - Garde admin : `/admin` sans session → `307` vers `/login` ; avec
   session forgée → dashboard rendu, éditeur accessible.
 
+### Login vérifié en navigateur réel (Playwright, vrais clics)
+
+Test `e2e/login.mjs` (`npm run test:e2e`, serveur + base démarrés) — 9/9 :
+- garde `/admin` anonyme → `/login` ;
+- mauvais mot de passe → « Identifiants incorrects. », reste sur
+  `/login`, **aucune session** ;
+- bon mot de passe → redirection `/admin`, **cookie `bo_session`
+  httpOnly** posé, dashboard visible ;
+- session persistante après navigation.
+
+**Bug UX trouvé et corrigé grâce au test réel** : React 19 réinitialise
+le formulaire après une action serveur, ce qui vidait aussi le champ
+email après un échec de connexion. Corrigé en réémettant l'email dans
+l'état de l'action (`login/actions.ts`) et en l'utilisant comme
+`defaultValue` (`login/login-form.tsx`) — l'email survit au reset, le mot
+de passe reste vidé (voulu).
+
+Note : `output: "standalone"` retiré de `next.config.mjs` (le Dockerfile
+lance `next start`, l'artefact standalone était inutile et déclenchait un
+avertissement).
+
 ---
 
 ## Scénario cible (à re-tester en conditions réelles)
@@ -115,9 +136,6 @@ navigateur réel avec un vrai code d'éditeur collé.
 
 ## Ce qui n'est PAS encore fait (roadmap)
 
-- **Login réel exercé en navigateur** (le server action `login` +
-  `bcrypt.compare` est écrit et testé logiquement ; la session est, elle,
-  exercée). À passer sous Playwright avec de vrais `.fill()`/`.click()`.
 - **Envoi d'email d'invitation** : le token est généré et l'URL affichée
   dans l'admin, mais l'email n'est pas envoyé (copier/coller manuel pour
   l'instant). Brancher un transport (Resend/SMTP) plus tard.

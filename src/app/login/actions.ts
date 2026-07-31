@@ -11,18 +11,21 @@ const schema = z.object({
   password: z.string().min(1),
 });
 
-export type LoginState = { error?: string };
+// `email` est renvoyé pour survivre au reset automatique du formulaire
+// (React 19) : l'utilisateur n'a pas à le retaper après une erreur.
+export type LoginState = { error?: string; email?: string };
 
 export async function login(
   _prev: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
+  const email = String(formData.get("email") ?? "");
   const parsed = schema.safeParse({
-    email: formData.get("email"),
+    email,
     password: formData.get("password"),
   });
   if (!parsed.success) {
-    return { error: "Email ou mot de passe invalide." };
+    return { error: "Email ou mot de passe invalide.", email };
   }
 
   const user = await prisma.user.findUnique({
@@ -31,7 +34,7 @@ export async function login(
   // Message générique : on ne révèle pas si l'email existe.
   const ok = user && (await verifyPassword(parsed.data.password, user.passwordHash));
   if (!user || !ok) {
-    return { error: "Identifiants incorrects." };
+    return { error: "Identifiants incorrects.", email };
   }
 
   await createSession(user.id);
