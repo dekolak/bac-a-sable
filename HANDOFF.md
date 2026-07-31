@@ -119,6 +119,17 @@ Note : `output: "standalone"` retiré de `next.config.mjs` (le Dockerfile
 lance `next start`, l'artefact standalone était inutile et déclenchait un
 avertissement).
 
+### URL publique résolue à l'exécution (piège dx évité)
+
+`NEXT_PUBLIC_APP_URL` remplacée par `APP_URL` (`src/lib/app-url.ts`). Les
+variables `NEXT_PUBLIC_*` sont **inlinées au build** — prouvé : la valeur
+était figée dans `.next/server/.../page.js`. Une valeur posée dans Coolify
+aurait donc été ignorée. `APP_URL` est une variable runtime classique,
+avec repli automatique sur `X-Forwarded-Host`/`Host`. Vérifié : le snippet
+d'embed reflète bien la valeur runtime (jamais vue au build) et le repli
+sur l'hôte fonctionne. Doc de déploiement exacte : `docs/COOLIFY.md`
+(variables, port 3000, chemin du Dockerfile).
+
 ---
 
 ## Scénario cible (à re-tester en conditions réelles)

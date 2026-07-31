@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getAppUrl } from "@/lib/app-url";
 import { VisibiliteBadge, StatutBadge } from "@/components/badges";
 import { CodePanel } from "./code-panel";
 import { DonneesPanel } from "./donnees-panel";
@@ -37,7 +38,7 @@ export default async function BlocEditorPage({
   });
   if (!bloc) notFound();
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const appUrl = await getAppUrl();
 
   return (
     <div>

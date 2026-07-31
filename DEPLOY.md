@@ -25,15 +25,11 @@ next start              # sert l'app sur le port 3000
 | Variable | Rôle |
 |---|---|
 | `DATABASE_URL` | connexion PostgreSQL |
-| `SESSION_SECRET` | secret aléatoire long (sessions/tokens) |
-| `NEXT_PUBLIC_APP_URL` | URL publique, sert à générer le snippet d'embed (sans slash final) |
+| `APP_URL` | URL publique pour le snippet d'embed (optionnelle ; déduite de l'hôte sinon) |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | admin initial (amorçage ; retirable ensuite) |
 
-Générer un secret :
-
-```bash
-node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
-```
+La liste exacte, le port et le chemin du Dockerfile sont détaillés dans
+[`docs/COOLIFY.md`](./docs/COOLIFY.md).
 
 ## 4. Après le premier déploiement
 
