@@ -132,16 +132,33 @@ sur l'hôte fonctionne. Doc de déploiement exacte : `docs/COOLIFY.md`
 
 ---
 
-## Scénario cible (à re-tester en conditions réelles)
+## Écriture d'un bloc depuis son propre code (fait)
 
-Éditeur de guide interactif → un bloc `PUBLIC`/`TEST` :
-1. coller le code de l'éditeur dans l'onglet **Code** ;
-2. mettre le contenu du guide dans **Données** (clé `guide`, valeur JSON) ;
-3. copier le snippet de l'onglet **Partage** sur un site client ;
-4. modifier le contenu depuis la plateforme → l'iframe affiche la MAJ.
+Un outil collé peut désormais **persister son contenu** dans le stockage
+clé-valeur de la plateforme, au lieu de localStorage (fini le copier-coller
+de code). Réf. complète : `docs/BLOCS.md`.
 
-Le rendu + l'injection de données sont vérifiés ; reste à valider dans un
-navigateur réel avec un vrai code d'éditeur collé.
+- **Surface d'édition admin** `/blocs/<slug>/app` (route handler,
+  `requireUser`) — le bloc y tourne **same-origin** (cookie de session
+  présent), avec un shim en écriture.
+- **Shim en écriture** (`src/lib/render.ts`, option `writable`) :
+  `window.BLOC.set(cle, valeur)` et `window.BLOC.save({…})` → `PUT
+  /api/blocs/<slug>/donnees`.
+- **Endpoint admin** `PUT /api/blocs/<slug>/donnees` — session requise +
+  garde CSRF same-origin (en-tête `Origin`), upsert (fusion, n'efface rien).
+- L'embed **public reste lecture seule** (`/outils/<slug>/embed`, shim sans
+  méthodes d'écriture ; `PUT` public → 405).
+- Choix d'archi : surface admin same-origin (le code collé est le nôtre),
+  plutôt qu'un jeton d'écriture.
+
+**Vérifié bout en bout** (navigateur réel + vraie base) : garde
+`/blocs/<slug>/app` (307 → /login sans session) ; `window.BLOC.save()`
+persiste ; l'API publique read-only reflète aussitôt l'écriture ; `PUT`
+sans session → 401, origine croisée → 403, `PUT` public → 405.
+
+Scénario éditeur de guide : coller le code **une fois** dans un bloc,
+ouvrir « Ouvrir l'éditeur ↗ », remplacer `localStorage` par
+`window.BLOC.save/get` — seul le contenu (données) change ensuite.
 
 ---
 

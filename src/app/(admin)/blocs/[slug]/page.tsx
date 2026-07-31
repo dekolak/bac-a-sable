@@ -51,12 +51,21 @@ export default async function BlocEditorPage({
         <VisibiliteBadge value={bloc.visibilite} />
         <StatutBadge value={bloc.statut} />
         <a
-          href={`/outils/${bloc.slug}`}
+          href={`/blocs/${bloc.slug}/app`}
           target="_blank"
           rel="noreferrer"
           className="ml-auto text-sm text-accent hover:underline"
+          title="Surface d'édition : le bloc tourne connecté et peut écrire ses données"
         >
-          Ouvrir /outils/{bloc.slug} ↗
+          Ouvrir l'éditeur ↗
+        </a>
+        <a
+          href={`/outils/${bloc.slug}`}
+          target="_blank"
+          rel="noreferrer"
+          className="text-sm text-accent hover:underline"
+        >
+          Vue publique ↗
         </a>
       </div>
 
