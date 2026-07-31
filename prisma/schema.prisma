@@ -1,0 +1,111 @@
+// ─────────────────────────────────────────────────────────────
+// Boîte à outils / bac à sable — schéma de données
+//
+// Principe : une seule infra, plusieurs « blocs » isolés.
+// Un bloc = un petit outil (HTML/JS collé) + un stockage clé-valeur
+// générique + un statut d'accès. Créer un bloc = un INSERT, jamais
+// un déploiement.
+// ─────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Visibilité d'un bloc = qui peut y accéder.
+enum BlocVisibilite {
+  PUBLIC // accessible sans connexion (embarquable sur un site externe)
+  PRIVE // moi seul (admin connecté)
+  PARTAGE // amis invités par email, accès limité à CE bloc
+}
+
+// Cycle de vie d'un bloc (label informatif en V1, ne bloque pas l'accès).
+enum BlocStatut {
+  BROUILLON
+  TEST
+  PROD
+}
+
+// L'admin de la plateforme. Une seule ligne en V1, mais modélisé
+// proprement pour la gestion de session.
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  sessions     Session[]
+  blocs        Bloc[]
+
+  @@map("user")
+}
+
+// Session serveur (cookie httpOnly côté client, id opaque en base).
+model Session {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("session")
+}
+
+// Un bloc = un outil isolé.
+model Bloc {
+  id          String         @id @default(cuid())
+  slug        String         @unique // -> /outils/<slug>
+  nom         String
+  description String?
+  code        String         @default("") @db.Text // le HTML/JS collé (rendu en iframe sandbox)
+  visibilite  BlocVisibilite @default(PRIVE)
+  statut      BlocStatut     @default(BROUILLON)
+  ownerId     String         @map("owner_id")
+  owner       User           @relation(fields: [ownerId], references: [id])
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  donnees   BlocDonnee[]
+  invitations BlocInvitation[]
+
+  @@index([ownerId])
+  @@map("bloc")
+}
+
+// Stockage clé-valeur générique, isolé PAR bloc.
+// L'unicité (bloc_id, cle) + le scoping systématique par bloc_id
+// garantissent qu'aucune donnée ne fuit d'un bloc à l'autre.
+model BlocDonnee {
+  id        String   @id @default(cuid())
+  blocId    String   @map("bloc_id")
+  bloc      Bloc     @relation(fields: [blocId], references: [id], onDelete: Cascade)
+  cle       String
+  valeur    Json // structure libre, aucun schéma rigide
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([blocId, cle])
+  @@map("bloc_donnee")
+}
+
+// Invitation d'un ami sur un bloc PARTAGE. Accès par lien magique
+// (token), révocable, limité à ce seul bloc. Pas de compte/mot de passe.
+model BlocInvitation {
+  id           String    @id @default(cuid())
+  blocId       String    @map("bloc_id")
+  bloc         Bloc      @relation(fields: [blocId], references: [id], onDelete: Cascade)
+  email        String
+  token        String    @unique
+  acceptedAt   DateTime? @map("accepted_at")
+  lastAccessAt DateTime? @map("last_access_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@unique([blocId, email])
+  @@index([blocId])
+  @@map("bloc_invitation")
+}

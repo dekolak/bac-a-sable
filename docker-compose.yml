@@ -1,0 +1,23 @@
+# PostgreSQL local pour le développement.
+#   docker compose up -d
+# La chaîne DATABASE_URL correspondante est dans .env.example.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: boite
+      POSTGRES_PASSWORD: boite
+      POSTGRES_DB: boite_outils
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U boite -d boite_outils"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db_data:
