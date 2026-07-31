@@ -11,8 +11,8 @@ connexion.
 
 ## 2. Application
 
-Déployer ce dépôt via le **Dockerfile** fourni. Au démarrage, le
-conteneur exécute automatiquement :
+Déployer ce dépôt via le **Dockerfile** fourni (base `node:22-slim`). Au
+démarrage, `docker-entrypoint.sh` exécute automatiquement :
 
 ```
 prisma migrate deploy   # applique les migrations en attente (idempotent)

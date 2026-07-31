@@ -1,30 +1,45 @@
-# ── Dockerfile (déploiement Coolify / conteneur) ──────────────
-# Build multi-étapes. Au démarrage : applique les migrations puis lance
-# le serveur Next.
+# Image de production pour Coolify.
+# Multi-étapes : build complet puis image d'exécution.
+# Base Debian slim (pas alpine) : le moteur Prisma y est le plus fiable.
 
-FROM node:22-alpine AS deps
+# --- Build --------------------------------------------------------------------
+FROM node:22-slim AS build
 WORKDIR /app
-COPY package.json package-lock.json* ./
+
+# openssl est requis par le moteur Prisma (libquery_engine-debian-openssl-3.0.x).
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
+COPY package.json package-lock.json ./
+# Le schéma DOIT être présent AVANT `npm ci` : le script postinstall lance
+# `prisma generate`, qui échoue sinon (« Could not find Prisma Schema »).
+# C'est aussi ici que le moteur Prisma est téléchargé → le build a besoin
+# d'un accès réseau sortant (registre npm + binaries.prisma.sh).
+COPY prisma ./prisma
 RUN npm ci
 
-FROM node:22-alpine AS build
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# `prisma generate` est appelé par le script build.
+# `build` = prisma generate + next build (voir package.json).
 RUN npm run build
 
-FROM node:22-alpine AS runner
+# --- Runner -------------------------------------------------------------------
+FROM node:22-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+ENV PORT=3000
+
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
+# On réutilise les node_modules du build (client Prisma généré + CLI Prisma et
+# tsx pour les migrations et le seed au démarrage).
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/.next ./.next
 COPY --from=build /app/public ./public
+COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/next.config.mjs ./next.config.mjs
-COPY --from=build /app/prisma ./prisma
+COPY --from=build /app/docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 
 EXPOSE 3000
-# migrate deploy est idempotent ; le seed ne crée l'admin que si
-# ADMIN_EMAIL / ADMIN_PASSWORD sont fournis.
-CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && npm run start"]
+# Applique les migrations, seed l'admin, puis démarre Next.
+CMD ["./docker-entrypoint.sh"]
