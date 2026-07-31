@@ -145,11 +145,16 @@ navigateur réel avec un vrai code d'éditeur collé.
 
 ---
 
+## Décidé hors scope
+
+- **Envoi d'email d'invitation (terminé — hors scope).** Le lien
+  d'invitation est généré et **affiché dans l'admin** (onglet Partage) ;
+  le partager en copier-coller manuel suffit à l'usage prévu. Décision
+  actée : **on ne branche pas de transport email** (ni Resend, ni SMTP).
+  Rien à faire côté code.
+
 ## Ce qui n'est PAS encore fait (roadmap)
 
-- **Envoi d'email d'invitation** : le token est généré et l'URL affichée
-  dans l'admin, mais l'email n'est pas envoyé (copier/coller manuel pour
-  l'instant). Brancher un transport (Resend/SMTP) plus tard.
 - **API d'écriture programmatique** (ex. pousser des données depuis un
   outil externe autorisé). V1 : écriture via l'UI admin uniquement.
 - **Versionnage / historique** du code et des données d'un bloc.
