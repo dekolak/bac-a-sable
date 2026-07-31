@@ -68,13 +68,20 @@ Ce sont exactement les pièges qui ont posé problème sur dx :
 
 ## 3. Séquence de démarrage du conteneur
 
-Le `CMD` du Dockerfile exécute, à chaque démarrage :
+Le `CMD` du Dockerfile lance `docker-entrypoint.sh`, qui exécute à chaque
+démarrage :
 
 ```
 npx prisma migrate deploy   # applique les migrations en attente (idempotent)
 npx prisma db seed          # crée/met à jour l'admin si ADMIN_* sont fournis
-npm run start               # next start, port 3000
+npm run start -- -p $PORT   # next start (port 3000 par défaut)
 ```
+
+> Le build utilise l'image **`node:22-slim`** (Debian) avec `openssl`
+> installé — requis par le moteur Prisma. Le dossier `prisma/` est copié
+> **avant** `npm ci` (le postinstall `prisma generate` échouerait sinon,
+> schéma introuvable). Le build a besoin d'un accès réseau sortant vers le
+> registre npm **et** `binaries.prisma.sh` (téléchargement du moteur).
 
 **Note sur le seed** : il fait un *upsert* de l'admin. Tant que
 `ADMIN_EMAIL` / `ADMIN_PASSWORD` restent définies, **le mot de passe est
