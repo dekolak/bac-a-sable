@@ -22,6 +22,7 @@ sensibles à la casse — les copier tels quels.
 | `ADMIN_EMAIL` | Au 1er démarrage | Runtime (seed) | Email de l'admin créé par le seed. |
 | `ADMIN_PASSWORD` | Au 1er démarrage | Runtime (seed) | Mot de passe de l'admin (voir note ci-dessous). |
 | `APP_URL` | Non (optionnelle) | Runtime | URL publique pour le snippet d'embed. Si absente, déduite de l'hôte de la requête. |
+| `COOKIE_SECURE` | Non (optionnelle) | Runtime | Force l'attribut `Secure` des cookies. `false` = jamais Secure (dépannage HTTP), `true` = toujours, absente = Secure en prod. Voir §6. |
 
 Variables gérées automatiquement — **ne pas les définir à la main** :
 
@@ -110,3 +111,27 @@ identifiants dans `DATABASE_URL`. Le schéma et les migrations sont dans
       n'existent pas ici)
 - [ ] Port applicatif : `3000`
 - [ ] Dockerfile : `Dockerfile` à la racine, contexte `.`
+
+---
+
+## 6. HTTPS et cookies (`COOKIE_SECURE`)
+
+En production, les cookies de session sont posés avec l'attribut `Secure`
+→ le navigateur ne les renvoie **que sur HTTPS** (l'exception étant
+`localhost`). Si tu accèdes à la plateforme en **HTTP simple** (port
+direct, avant d'avoir configuré Traefik/TLS), le cookie est refusé, la
+session n'est jamais renvoyée, et **chaque action te renvoie vers
+`/login`**.
+
+Dépannage temporaire — poser la variable :
+
+```
+COOKIE_SECURE=false
+```
+
+Les cookies ne sont alors plus `Secure` et la connexion fonctionne en
+HTTP. **⚠️ À retirer dès que le HTTPS est en place** (sinon les cookies
+de session circulent en clair).
+
+Une fois le domaine en HTTPS : supprimer `COOKIE_SECURE` (ou la mettre à
+`true`) pour rétablir le comportement sécurisé par défaut.

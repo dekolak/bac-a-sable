@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { randomBytes } from "crypto";
 import type { User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { cookieSecure } from "@/lib/cookies";
 
 const SESSION_COOKIE = "bo_session";
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 jours
@@ -22,7 +23,7 @@ export async function createSession(userId: string): Promise<void> {
   const jar = await cookies();
   jar.set(SESSION_COOKIE, session.id, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecure(),
     sameSite: "lax",
     path: "/",
     expires: expiresAt,
