@@ -12,6 +12,7 @@ type BlocSettings = {
   nom: string;
   slug: string;
   description: string | null;
+  groupe: string | null;
   visibilite: "PUBLIC" | "PRIVE" | "PARTAGE";
   statut: "BROUILLON" | "TEST" | "PROD";
 };
@@ -52,6 +53,21 @@ export function ReglagesPanel({ bloc }: { bloc: BlocSettings }) {
             defaultValue={bloc.description ?? ""}
             className={inputCls}
           />
+        </div>
+        <div>
+          <label htmlFor="groupe" className="mb-1 block text-sm text-muted">
+            Groupe / Projet (optionnel)
+          </label>
+          <input
+            id="groupe"
+            name="groupe"
+            defaultValue={bloc.groupe ?? ""}
+            placeholder="Ex. Kiavik, Dxonjet"
+            className={inputCls}
+          />
+          <p className="mt-1 text-xs text-muted">
+            Les blocs d'un même groupe sont rassemblés sur l'accueil (couleur automatique).
+          </p>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>

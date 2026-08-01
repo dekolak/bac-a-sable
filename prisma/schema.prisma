@@ -62,6 +62,7 @@ model Bloc {
   slug        String         @unique // -> /outils/<slug>
   nom         String
   description String?
+  groupe      String? // regroupement libre sur l'accueil (ex. « Kiavik », « Dxonjet »)
   code        String         @default("") @db.Text // le HTML/JS collé (rendu en iframe sandbox)
   visibilite  BlocVisibilite @default(PRIVE)
   statut      BlocStatut     @default(BROUILLON)
