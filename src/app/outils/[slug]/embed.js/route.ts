@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { NO_CACHE_HEADERS } from "@/lib/no-cache";
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +54,7 @@ export async function GET(
   return new Response(js, {
     headers: {
       "content-type": "application/javascript; charset=utf-8",
-      "cache-control": "no-store",
+      ...NO_CACHE_HEADERS,
     },
   });
 }

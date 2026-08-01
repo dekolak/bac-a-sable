@@ -1,12 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { canReadBloc } from "@/lib/access";
+import { NO_CACHE_HEADERS } from "@/lib/no-cache";
 
 export const dynamic = "force-dynamic";
 
 const CORS = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "GET, OPTIONS",
-  "cache-control": "no-store",
+  ...NO_CACHE_HEADERS,
 };
 
 // API publique EN LECTURE SEULE des données d'un bloc.

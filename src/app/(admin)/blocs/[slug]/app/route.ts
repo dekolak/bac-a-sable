@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { buildBlocDocument } from "@/lib/render";
+import { NO_CACHE_HEADERS } from "@/lib/no-cache";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export async function GET(
   return new Response(html, {
     headers: {
       "content-type": "text/html; charset=utf-8",
-      "cache-control": "no-store",
+      ...NO_CACHE_HEADERS,
     },
   });
 }
