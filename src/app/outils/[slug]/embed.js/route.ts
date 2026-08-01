@@ -35,6 +35,7 @@ export async function GET(
   iframe.src = base + "/embed";
   iframe.setAttribute("sandbox", "allow-scripts allow-forms allow-popups");
   iframe.style.width = "100%";
+  iframe.style.maxWidth = "100%";
   iframe.style.border = "0";
   iframe.style.display = "block";
   iframe.style.height = "300px";
