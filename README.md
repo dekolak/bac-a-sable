@@ -47,18 +47,30 @@ npm run db:seed               # crée l'admin (ADMIN_EMAIL / ADMIN_PASSWORD)
 npm run dev                   # http://localhost:3000
 ```
 
+## Organisation
+
+Chaque bloc peut porter un **groupe / projet** (texte libre) : l'accueil
+regroupe les blocs par groupe, avec une couleur automatique. Quand une
+« visionneuse » lit un bloc « éditeur » (donnée `source`), un lien rapide
+relie les deux pages.
+
 ## Pages
 
 | URL | Rôle |
 |---|---|
 | `/login` | connexion admin |
-| `/admin` | liste des blocs |
+| `/admin` | accueil (blocs groupés par projet) |
 | `/blocs/nouveau` | créer un bloc |
 | `/blocs/<slug>` | éditeur (Code / Données / Partage / Réglages) |
+| `/blocs/<slug>/app` | surface d'édition (écriture via `window.BLOC`) |
 | `/outils/<slug>` | rendu public plein écran |
 | `/outils/<slug>/embed` | rendu nu (iframe) |
 | `/outils/<slug>/embed.js` | script d'intégration |
 | `/p/<token>` | entrée d'un ami invité (bloc partagé) |
 
-Voir [`DEPLOY.md`](./DEPLOY.md) pour le déploiement et
-[`HANDOFF.md`](./HANDOFF.md) pour l'état détaillé du projet.
+## Documentation
+
+- [`docs/GUIDE.md`](./docs/GUIDE.md) — **guide d'utilisation complet** (commence ici).
+- [`docs/BLOCS.md`](./docs/BLOCS.md) — API `window.BLOC` + endpoints + exemple de visionneuse.
+- [`docs/COOLIFY.md`](./docs/COOLIFY.md) — variables d'env exactes, port, Dockerfile.
+- [`DEPLOY.md`](./DEPLOY.md) — déploiement · [`HANDOFF.md`](./HANDOFF.md) — état du projet.
