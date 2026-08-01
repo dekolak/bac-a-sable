@@ -55,7 +55,14 @@ export function buildBlocDocument(
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>${escapeHtml(bloc.nom)}</title>
-<style>html,body{margin:0;font-family:system-ui,sans-serif}</style>
+<style>
+  html,body{margin:0;font-family:system-ui,sans-serif}
+  /* Médias responsives par défaut : évite le débordement horizontal sur
+     mobile quand un bloc affiche une image/vidéo plus large que l'écran.
+     L'auto-resize ne gère que la hauteur ; sans ceci, une image large
+     provoque un scroll horizontal dans l'iframe d'intégration. */
+  img,video{max-width:100%;height:auto}
+</style>
 <script>
   window.BLOC = (function () {
     var slug = ${slugJson};
