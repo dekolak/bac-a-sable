@@ -64,6 +64,7 @@ const settingsSchema = z.object({
   nom: z.string().min(1).max(120),
   slug: z.string().min(1),
   description: z.string().max(500).optional().nullable(),
+  groupe: z.string().max(80).optional().nullable(),
   visibilite: visibiliteEnum,
   statut: statutEnum,
 });
@@ -78,6 +79,7 @@ export async function updateBlocSettings(
     nom: formData.get("nom"),
     slug: formData.get("slug"),
     description: formData.get("description"),
+    groupe: formData.get("groupe"),
     visibilite: formData.get("visibilite"),
     statut: formData.get("statut"),
   });
@@ -100,6 +102,7 @@ export async function updateBlocSettings(
       nom: parsed.data.nom,
       slug,
       description: parsed.data.description || null,
+      groupe: parsed.data.groupe?.trim() || null,
       visibilite: parsed.data.visibilite,
       statut: parsed.data.statut,
     },
