@@ -1,0 +1,53 @@
+# Déploiement Coolify DERRIÈRE le Traefik du stack n8n (comme pose).
+#
+# Pourquoi ce fichier : l'app doit être sur le réseau externe
+# `n8n-compose_default` (là où ce Traefik écoute) pour être routée. Un
+# `docker network connect` manuel ne survit pas à un redéploiement (Coolify
+# recrée le conteneur). En déclarant le réseau externe ICI, Coolify rebranche
+# le conteneur à chaque déploiement — le rattachement devient permanent.
+#
+# Utilisation dans Coolify :
+#   Type de ressource = « Docker Compose », fichier = docker-compose.coolify.yml
+#   Renseigner les variables (DATABASE_URL, ADMIN_EMAIL, ADMIN_PASSWORD,
+#   APP_URL, COOKIE_SECURE) dans les variables d'environnement Coolify.
+#
+# Coolify attache aussi automatiquement SON réseau de gestion aux services
+# d'un déploiement Compose ; ce fichier ne fait qu'AJOUTER le réseau externe
+# du Traefik n8n. Garde le même DATABASE_URL qu'avant.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: "${DATABASE_URL}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-}"
+      APP_URL: "${APP_URL:-}"
+      # Maintenant que le domaine est en HTTPS, laisser vide/true.
+      COOKIE_SECURE: "${COOKIE_SECURE:-true}"
+    networks:
+      - default
+      - n8n_shared
+    labels:
+      # Mêmes labels que pose : Traefik du stack n8n, entrypoint websecure,
+      # certresolver mytlschallenge. `traefik.docker.network` indique par quel
+      # réseau Traefik joint le conteneur.
+      - "traefik.enable=true"
+      - "traefik.docker.network=n8n-compose_default"
+      - "traefik.http.routers.bac-a-sable.rule=Host(`outils.dekolak.fr`)"
+      - "traefik.http.routers.bac-a-sable.entrypoints=websecure"
+      - "traefik.http.routers.bac-a-sable.tls=true"
+      - "traefik.http.routers.bac-a-sable.tls.certresolver=mytlschallenge"
+      - "traefik.http.services.bac-a-sable.loadbalancer.server.port=3000"
+
+networks:
+  default: {}
+  # Réseau Docker du stack n8n existant (Traefik y écoute déjà). Doit exister
+  # au moment du déploiement — géré par le compose n8n, pas par celui-ci.
+  # `external: true` = on ne le crée/détruit jamais depuis ce projet.
+  n8n_shared:
+    name: n8n-compose_default
+    external: true
