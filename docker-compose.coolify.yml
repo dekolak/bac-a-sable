@@ -11,9 +11,16 @@
 #   Renseigner les variables (DATABASE_URL, ADMIN_EMAIL, ADMIN_PASSWORD,
 #   APP_URL, COOKIE_SECURE) dans les variables d'environnement Coolify.
 #
+# ⚠️ ACCÈS À LA BASE : en mode Docker Compose, Coolify ne place le conteneur
+# QUE sur les réseaux déclarés ci-dessous. Le Postgres existant (créé par
+# Coolify) vit sur le réseau Coolify — s'il n'est pas listé ici, l'app ne
+# résout plus le hostname de la base (erreur `P1001: Can't reach database
+# server`) et le conteneur plante en boucle. On l'ajoute donc via le réseau
+# externe `db_net` (voir plus bas).
+#
 # Coolify attache aussi automatiquement SON réseau de gestion aux services
-# d'un déploiement Compose ; ce fichier ne fait qu'AJOUTER le réseau externe
-# du Traefik n8n. Garde le même DATABASE_URL qu'avant.
+# d'un déploiement Compose ; ce fichier ne fait qu'AJOUTER les réseaux externes
+# (Traefik n8n + base Coolify). Garde le même DATABASE_URL qu'avant.
 
 services:
   app:
@@ -30,7 +37,8 @@ services:
       COOKIE_SECURE: "${COOKIE_SECURE:-true}"
     networks:
       - default
-      - n8n_shared
+      - n8n_shared   # Traefik (routage HTTPS)
+      - db_net       # Postgres existant (accès à la base)
     labels:
       # Mêmes labels que pose : Traefik du stack n8n, entrypoint websecure,
       # certresolver mytlschallenge. `traefik.docker.network` indique par quel
@@ -50,4 +58,13 @@ networks:
   # `external: true` = on ne le crée/détruit jamais depuis ce projet.
   n8n_shared:
     name: n8n-compose_default
+    external: true
+  # Réseau où vit le Postgres existant (créé par Coolify). Nom paramétrable via
+  # DB_NETWORK — défaut `coolify` (réseau prédéfini de Coolify). VÉRIFIER le vrai
+  # nom en inspectant le conteneur de la base :
+  #   docker inspect <conteneur-postgres> \
+  #     --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{"\n"}}{{end}}'
+  # puis, si différent, poser DB_NETWORK=<nom> dans les variables Coolify.
+  db_net:
+    name: "${DB_NETWORK:-coolify}"
     external: true
