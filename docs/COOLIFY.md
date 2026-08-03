@@ -135,3 +135,31 @@ de session circulent en clair).
 
 Une fois le domaine en HTTPS : supprimer `COOKIE_SECURE` (ou la mettre à
 `true`) pour rétablir le comportement sécurisé par défaut.
+
+---
+
+## 7. Traefik & réseau (setup n8n)
+
+Sur ce serveur, le routage HTTPS est assuré par le **Traefik du stack
+n8n** (entrypoints `web`/`websecure`, certresolver `mytlschallenge`) — pas
+par le proxy interne de Coolify. Les labels auto-générés par Coolify
+pointent vers des entrypoints inexistants (`http`/`https`/`letsencrypt`)
+et sont donc ignorés (« entryPoint doesn't exist »).
+
+Il faut deux choses, comme pour `pose` :
+
+1. **Les labels Traefik personnalisés** (entrypoint `websecure`, `tls`,
+   certresolver `mytlschallenge`) — voir `docker-compose.coolify.yml`.
+2. **Le conteneur sur le réseau externe `n8n-compose_default`** (là où ce
+   Traefik écoute).
+
+Un `docker network connect` manuel **ne survit pas** à un redéploiement.
+La façon permanente : **déployer via `docker-compose.coolify.yml`** (type
+de ressource « Docker Compose » dans Coolify), qui déclare le réseau
+externe — Coolify rebranche alors le conteneur à chaque déploiement.
+
+Symptôme si le réseau/les labels sont mauvais :
+- `404 page not found` en `text/plain` → aucun routeur Traefik ne matche
+  (entrypoint inexistant, ou conteneur hors réseau) ;
+- `502 Bad Gateway` → routeur OK mais Traefik ne joint pas le backend
+  (conteneur pas sur `n8n-compose_default`, ou mauvais port de service).
