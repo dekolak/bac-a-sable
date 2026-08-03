@@ -81,16 +81,37 @@ export function buildBlocDocument(
 ${bloc.code || ""}
 <script>
   // Auto-redimensionnement : informe la page hôte de la hauteur réelle.
+  // Le message part en targetOrigin "*" (aucune origine codée en dur) : le
+  // mécanisme fonctionne quel que soit le domaine de l'hôte (HTTP, HTTPS,
+  // IP:port…). Ce qui compte, c'est de RE-mesurer chaque fois que le contenu
+  // change de taille — pas seulement à l'évènement load. Beaucoup de blocs
+  // (ex. la visionneuse de guide) récupèrent leurs données en asynchrone puis
+  // rendent images/texte APRÈS le chargement ; un simple setTimeout fige alors la
+  // hauteur trop tôt et l'hôte reste coincé sur la hauteur par défaut (scroll
+  // interne). Un ResizeObserver suit toute croissance ultérieure.
   (function () {
+    var last = -1;
     function post() {
       try {
         var h = document.documentElement.scrollHeight;
+        if (h === last) return; // évite les messages en boucle (ResizeObserver)
+        last = h;
         parent.postMessage({ type: "bloc:height", slug: window.BLOC.slug, height: h }, "*");
       } catch (e) {}
     }
     window.addEventListener("load", post);
     window.addEventListener("resize", post);
     setTimeout(post, 300);
+    // Suit les changements de hauteur dus au rendu asynchrone / images tardives.
+    if (window.ResizeObserver) {
+      try { new ResizeObserver(post).observe(document.documentElement); } catch (e) {}
+    }
+    // Filet de sécurité : chaque image qui finit de charger peut agrandir la page.
+    document.addEventListener(
+      "load",
+      function (e) { if (e.target && e.target.tagName === "IMG") post(); },
+      true,
+    );
   })();
 </script>
 </body>
