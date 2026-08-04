@@ -78,6 +78,21 @@ model Bloc {
   @@map("bloc")
 }
 
+// Réglage d'un groupe (regroupement libre des blocs sur l'accueil).
+// Un groupe est identifié par son NOM (= Bloc.groupe). Cette table est un
+// simple override optionnel : si un groupe y a une couleur, elle prime ;
+// sinon on retombe sur la couleur automatique (dérivée du nom). Aucun bloc
+// ne référence cette table — le lien se fait par le nom.
+model GroupeReglage {
+  id        String   @id @default(cuid())
+  nom       String   @unique
+  couleur   String // hex, ex. « #4fa8e0 »
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("groupe_reglage")
+}
+
 // Stockage clé-valeur générique, isolé PAR bloc.
 // L'unicité (bloc_id, cle) + le scoping systématique par bloc_id
 // garantissent qu'aucune donnée ne fuit d'un bloc à l'autre.

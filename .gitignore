@@ -9,3 +9,4 @@
 .env*.local
 /coverage
 next-env.d.ts
+tsconfig.tsbuildinfo

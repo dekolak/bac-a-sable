@@ -62,6 +62,28 @@ export default async function BlocEditorPage({
     .map((d) => d.bloc)
     .filter((v) => v.slug !== bloc.slug);
 
+  // Groupes existants (pour la liste déroulante) + couleur choisie du groupe
+  // courant (pour pré-remplir le sélecteur de couleur dans les Réglages).
+  const groupesExistants = (
+    await prisma.bloc.findMany({
+      where: { groupe: { not: null } },
+      distinct: ["groupe"],
+      select: { groupe: true },
+      orderBy: { groupe: "asc" },
+    })
+  )
+    .map((b) => b.groupe!.trim())
+    .filter((g) => g.length > 0);
+
+  const couleurGroupe = bloc.groupe
+    ? (
+        await prisma.groupeReglage.findUnique({
+          where: { nom: bloc.groupe.trim() },
+          select: { couleur: true },
+        })
+      )?.couleur ?? null
+    : null;
+
   return (
     <div>
       <Link href="/admin" className="text-sm text-muted hover:text-white">
@@ -147,7 +169,13 @@ export default async function BlocEditorPage({
       {onglet === "partage" && (
         <PartagePanel bloc={bloc} invitations={bloc.invitations} appUrl={appUrl} />
       )}
-      {onglet === "reglages" && <ReglagesPanel bloc={bloc} />}
+      {onglet === "reglages" && (
+        <ReglagesPanel
+          bloc={bloc}
+          groupesExistants={groupesExistants}
+          couleurGroupe={couleurGroupe}
+        />
+      )}
     </div>
   );
 }
