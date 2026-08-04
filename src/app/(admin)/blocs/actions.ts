@@ -7,6 +7,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { slugify, isValidSlug } from "@/lib/slug";
+import { isHexColor } from "@/lib/group-color";
 
 const visibiliteEnum = z.enum(["PUBLIC", "PRIVE", "PARTAGE"]);
 const statutEnum = z.enum(["BROUILLON", "TEST", "PROD"]);
@@ -65,6 +66,8 @@ const settingsSchema = z.object({
   slug: z.string().min(1),
   description: z.string().max(500).optional().nullable(),
   groupe: z.string().max(80).optional().nullable(),
+  // Couleur choisie pour le groupe : vide = couleur automatique (pas d'override).
+  couleurGroupe: z.string().max(9).optional().nullable(),
   visibilite: visibiliteEnum,
   statut: statutEnum,
 });
@@ -80,6 +83,7 @@ export async function updateBlocSettings(
     slug: formData.get("slug"),
     description: formData.get("description"),
     groupe: formData.get("groupe"),
+    couleurGroupe: formData.get("couleurGroupe"),
     visibilite: formData.get("visibilite"),
     statut: formData.get("statut"),
   });
@@ -96,18 +100,41 @@ export async function updateBlocSettings(
   });
   if (clash) return { error: `Le slug « ${slug} » est déjà pris.` };
 
+  const groupe = parsed.data.groupe?.trim() || null;
+
   await prisma.bloc.update({
     where: { id: parsed.data.id },
     data: {
       nom: parsed.data.nom,
       slug,
       description: parsed.data.description || null,
-      groupe: parsed.data.groupe?.trim() || null,
+      groupe,
       visibilite: parsed.data.visibilite,
       statut: parsed.data.statut,
     },
   });
 
+  // Couleur du groupe (override optionnel, partagé par tout le groupe).
+  // Trois cas explicites, pour ne JAMAIS écraser par erreur la couleur d'un
+  // groupe existant quand on y déplace simplement un bloc sans toucher la
+  // couleur :
+  //   - hex valide  → on pose/actualise l'override du groupe ;
+  //   - "auto"      → reset explicite : on supprime l'override (couleur auto) ;
+  //   - vide/autre  → aucun changement (l'override éventuel est laissé tel quel).
+  const couleur = parsed.data.couleurGroupe?.trim() || "";
+  if (groupe && isHexColor(couleur)) {
+    await prisma.groupeReglage.upsert({
+      where: { nom: groupe },
+      create: { nom: groupe, couleur },
+      update: { couleur },
+    });
+  } else if (groupe && couleur === "auto") {
+    await prisma.groupeReglage
+      .delete({ where: { nom: groupe } })
+      .catch(() => {}); // pas d'override existant : rien à faire
+  }
+
+  revalidatePath("/admin");
   revalidatePath(`/blocs/${slug}`);
   redirect(`/blocs/${slug}`);
 }

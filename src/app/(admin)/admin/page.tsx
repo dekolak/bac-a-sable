@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { VisibiliteBadge, StatutBadge } from "@/components/badges";
-import { groupeColor } from "@/lib/group-color";
+import { resolveCouleur } from "@/lib/group-color";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +12,13 @@ export default async function DashboardPage() {
     orderBy: { updatedAt: "desc" },
     include: { _count: { select: { donnees: true } } },
   });
+
+  // Couleurs choisies par groupe (override optionnel ; sinon couleur auto).
+  const overrides = new Map(
+    (await prisma.groupeReglage.findMany({ select: { nom: true, couleur: true } })).map(
+      (g) => [g.nom, g.couleur] as const,
+    ),
+  );
 
   // Regroupement par « groupe » (les blocs sans groupe finissent ensemble).
   const groupes = new Map<string, typeof blocs>();
@@ -47,7 +54,7 @@ export default async function DashboardPage() {
           {cles.map((cle) => {
             const liste = groupes.get(cle)!;
             const nomme = cle !== SANS_GROUPE;
-            const couleur = nomme ? groupeColor(cle) : "#6b7683";
+            const couleur = nomme ? resolveCouleur(cle, overrides) : "#6b7683";
             return (
               <section key={cle || "__sans__"}>
                 <h2 className="mb-2 flex items-center gap-2 text-sm font-medium">
