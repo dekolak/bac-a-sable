@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { VisibiliteBadge, StatutBadge } from "@/components/badges";
 import { resolveCouleur } from "@/lib/group-color";
+import { GroupeSection } from "./groupe-section";
 
 export const dynamic = "force-dynamic";
 
@@ -55,19 +56,16 @@ export default async function DashboardPage() {
             const liste = groupes.get(cle)!;
             const nomme = cle !== SANS_GROUPE;
             const couleur = nomme ? resolveCouleur(cle, overrides) : "#6b7683";
+            const groupeKey = nomme ? cle : "__sans__";
             return (
-              <section key={cle || "__sans__"}>
-                <h2 className="mb-2 flex items-center gap-2 text-sm font-medium">
-                  <span
-                    className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ background: couleur }}
-                    aria-hidden
-                  />
-                  <span className={nomme ? "" : "text-muted"}>
-                    {nomme ? cle : "Sans groupe"}
-                  </span>
-                  <span className="text-xs font-normal text-muted">({liste.length})</span>
-                </h2>
+              <GroupeSection
+                key={groupeKey}
+                groupeKey={groupeKey}
+                titre={nomme ? cle : "Sans groupe"}
+                couleur={couleur}
+                count={liste.length}
+                nomme={nomme}
+              >
                 <ul className="divide-y divide-border overflow-hidden rounded-md border border-border">
                   {liste.map((bloc) => (
                     <li key={bloc.id} className="bg-panel">
@@ -97,7 +95,7 @@ export default async function DashboardPage() {
                     </li>
                   ))}
                 </ul>
-              </section>
+              </GroupeSection>
             );
           })}
         </div>
