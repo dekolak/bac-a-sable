@@ -19,6 +19,9 @@ export default async function AdminLayout({
             <Link href="/admin" className="font-semibold">
               Boîte à outils
             </Link>
+            <Link href="/lanceur" className="text-sm text-muted hover:text-white">
+              Mes outils
+            </Link>
             <Link href="/blocs/nouveau" className="text-sm text-muted hover:text-white">
               + Nouveau bloc
             </Link>

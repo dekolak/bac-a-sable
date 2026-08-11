@@ -36,12 +36,31 @@ model User {
   id           String    @id @default(cuid())
   email        String    @unique
   passwordHash String    @map("password_hash")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
   sessions     Session[]
   blocs        Bloc[]
+  raccourcis   Raccourci[]
 
   @@map("user")
+}
+
+// Raccourci du lanceur (« Mes outils ») : une tuile = icône + nom + couleur
+// + URL. Écran d'accueil personnel de l'admin, éditable depuis /lanceur.
+model Raccourci {
+  id        String   @id @default(cuid())
+  nom       String
+  url       String
+  icone     String   @default("") // un emoji (vide → initiale du nom)
+  couleur   String   @default("#2f6fed") // hex du fond de la tuile
+  ordre     Int      @default(0) // ordre d'affichage (croissant)
+  ownerId   String   @map("owner_id")
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([ownerId])
+  @@map("raccourci")
 }
 
 // Session serveur (cookie httpOnly côté client, id opaque en base).
