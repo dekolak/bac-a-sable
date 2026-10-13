@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { loadReadableBloc } from "@/lib/access";
+import { BLOC_FRAME_SANDBOX, BLOC_FRAME_ALLOW } from "@/lib/embed-frame";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,9 @@ export default async function OutilPage({
   return (
     <iframe
       src={`/outils/${slug}/embed`}
-      sandbox="allow-scripts allow-forms allow-popups"
+      sandbox={BLOC_FRAME_SANDBOX}
+      allow={BLOC_FRAME_ALLOW}
+      allowFullScreen
       title={bloc.nom}
       style={{ position: "fixed", inset: 0, width: "100%", height: "100%", border: 0 }}
     />
