@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NO_CACHE_HEADERS } from "@/lib/no-cache";
+import { BLOC_FRAME_SANDBOX, BLOC_FRAME_ALLOW } from "@/lib/embed-frame";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,12 @@ export async function GET(
 
   var iframe = document.createElement("iframe");
   iframe.src = base + "/embed";
-  iframe.setAttribute("sandbox", "allow-scripts allow-forms allow-popups");
+  // Charge une vraie URL (jamais un srcdoc). allow-same-origin est sûr : le
+  // bloc est servi depuis une origine différente du site hôte. Indispensable
+  // pour les iframes tierces (Vimeo), le fetch same-origin et localStorage.
+  iframe.setAttribute("sandbox", ${JSON.stringify(BLOC_FRAME_SANDBOX)});
+  iframe.setAttribute("allow", ${JSON.stringify(BLOC_FRAME_ALLOW)});
+  iframe.setAttribute("allowfullscreen", "");
   iframe.style.width = "100%";
   iframe.style.maxWidth = "100%";
   iframe.style.border = "0";
