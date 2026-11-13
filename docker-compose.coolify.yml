@@ -28,6 +28,14 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    # Garde-fous (VPS sans swap, partagé avec d'autres apps). Ce ne sont PAS un
+    # correctif de la fuite de threads (celle-ci se règle côté code, singleton
+    # Prisma) mais une protection de l'hôte + une alerte précoce :
+    #   - mem_limit : empêche l'app d'OOM-killer les voisins ;
+    #   - pids_limit : plafonne les threads/process (tripwire). Large à dessein
+    #     pour ne pas transformer un pic normal en crash.
+    mem_limit: 640m
+    pids_limit: 2048
     environment:
       DATABASE_URL: "${DATABASE_URL}"
       ADMIN_EMAIL: "${ADMIN_EMAIL:-}"
