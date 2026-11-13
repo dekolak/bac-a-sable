@@ -36,6 +36,19 @@ services:
     #     pour ne pas transformer un pic normal en crash.
     mem_limit: 640m
     pids_limit: 2048
+    # Healthcheck : interroge /api/sante (route légère, ne touche PAS la base).
+    # On utilise `node` (présent dans l'image node:22-slim) plutôt que curl/wget,
+    # absents de l'image. Coolify affiche alors l'état « Healthy » et peut
+    # redémarrer le conteneur s'il cesse de répondre. `start_period` couvre le
+    # temps de migrate+seed+démarrage de Next avant que les échecs ne comptent.
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - "node -e \"require('http').get('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/sante',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
     environment:
       DATABASE_URL: "${DATABASE_URL}"
       ADMIN_EMAIL: "${ADMIN_EMAIL:-}"
